@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulse - Connect & Share</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0b1120;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col selection:bg-blue-600 selection:text-white">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <nav class="sticky top-0 z-40 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800/90 px-4 py-3 shadow-lg">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+      
+      <!-- Brand & Page Switchers -->
+      <div class="flex items-center gap-6">
+        <a href="#/feed" onclick="navigateToFeed(event)" class="flex items-center gap-2.5 font-extrabold text-2xl tracking-tight text-white group cursor-pointer">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-bolt text-white text-lg"></i>
+          </div>
+          <span class="tracking-tight font-extrabold">Pulse</span>
+        </a>
+
+        <!-- Main Switcher Buttons -->
+        <div id="nav-interface-tabs" class="hidden sm:flex items-center gap-1 bg-slate-900/90 border border-slate-800 p-1 rounded-xl">
+          <button id="nav-btn-feed" onclick="navigateToFeed()" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm">
+            <i class="fa-solid fa-newspaper text-xs"></i>
+            <span>News Feed</span>
+          </button>
+          <button id="nav-btn-profile" onclick="viewCurrentUserProfile()" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+            <i class="fa-solid fa-user text-xs"></i>
+            <span>Profile</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Search Bar -->
+      <div class="relative flex-1 max-w-xs sm:max-w-md">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input 
+            type="text" 
+            id="search-input" 
+            oninput="handleUserSearch(this.value)" 
+            placeholder="Search users..." 
+            class="w-full bg-slate-900/90 border border-slate-750 text-slate-200 text-sm rounded-xl pl-9 pr-4 py-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-slate-500 transition-all"
+          >
+        </div>
+        
+        <!-- Search Results Dropdown -->
+        <div id="search-dropdown" class="hidden absolute top-full mt-2 w-full bg-[#111c33] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden z-50 divide-y divide-slate-800/60">
+        </div>
+      </div>
+
+      <!-- Right Auth/Actions Container -->
+      <div class="flex items-center gap-2.5">
+        <div id="auth-actions" class="flex items-center gap-2">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="flex-1 max-w-5xl mx-auto w-full px-4 py-6">
+
+    <!-- ================= INTERFACE 1: NEWS FEED ================= -->
+    <div id="news-feed-interface" class="space-y-6 max-w-2xl mx-auto">
+      
+      <!-- Post Composer -->
+      <div id="feed-composer" class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl backdrop-blur-sm">
+        <div class="flex gap-3 sm:gap-4">
+          <img id="composer-avatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff&bold=true" onerror="handleImageError(this, 'User')" alt="Avatar" class="w-11 h-11 rounded-2xl object-cover ring-2 ring-slate-800 shrink-0">
+          <div class="flex-1">
+            <textarea 
+              id="post-content-input" 
+              rows="3" 
+              placeholder="What's on your mind? Share updates, links, or ideas..." 
+              class="w-full bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 text-sm sm:text-base text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
+            ></textarea>
+            
+            <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-800/70">
+              <span class="text-xs text-slate-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-earth-americas text-blue-400"></i> Public to Pulse community
+              </span>
+              <button 
+                onclick="publishPost()" 
+                class="bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-semibold px-5 py-2 rounded-xl text-sm transition-all shadow-md shadow-blue-600/30 flex items-center gap-2"
+              >
+                <span>Publish Post</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feed Switcher (Global vs. Following) -->
+      <div class="flex items-center justify-between bg-slate-900/40 border border-slate-800/80 p-1.5 rounded-2xl">
+        <div class="flex items-center gap-1">
+          <button 
+            id="tab-global" 
+            onclick="switchFeedTab('global')" 
+            class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm"
+          >
+            <i class="fa-solid fa-globe text-xs"></i>
+            <span>Global Feed</span>
+          </button>
+          <button 
+            id="tab-following" 
+            onclick="switchFeedTab('following')" 
+            class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60"
+          >
+            <i class="fa-solid fa-user-group text-xs"></i>
+            <span>Following</span>
+          </button>
+        </div>
+
+        <button onclick="loadFeed(currentFeedTab)" title="Refresh Feed" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors text-xs flex items-center gap-1.5 px-3">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span class="hidden sm:inline">Refresh Feed</span>
+        </button>
+      </div>
+
+      <!-- Feed Posts Container -->
+      <div id="posts-container" class="space-y-4">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </div>
+
+    <!-- ================= INTERFACE 2: USER PROFILE ================= -->
+    <div id="profile-interface" class="hidden space-y-6 max-w-3xl mx-auto">
+      
+      <!-- Back to Feed Breadcrumb Navigation -->
+      <div class="flex items-center justify-between">
+        <button onclick="navigateToFeed()" class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-blue-400 transition-colors group">
+          <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+          <span>Back to News Feed</span>
+        </button>
+        <span id="profile-breadcrumb-name" class="text-xs font-semibold text-slate-500 uppercase tracking-wider"></span>
+      </div>
+
+      <!-- Profile Header Hero Card -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
+        <!-- Cover Art Banner -->
+        <div class="h-44 sm:h-52 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 relative">
+          <div class="absolute inset-0 bg-black/10"></div>
+          <div class="absolute top-4 right-4">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-black/30 backdrop-blur-md text-slate-200 border border-white/10">
+              <i class="fa-solid fa-shield-halved text-emerald-400"></i> Verified Profile
+            </span>
+          </div>
+        </div>
+
+        <!-- Details Strip -->
+        <div class="px-6 pb-6 pt-0 relative">
+          <div class="flex flex-col sm:flex-row items-center sm:items-end justify-between -mt-16 sm:-mt-20 gap-4 mb-6">
+            <div class="flex flex-col sm:flex-row items-center sm:items-end gap-4 text-center sm:text-left">
+              <img id="profile-avatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff&bold=true" onerror="handleImageError(this, 'User')" alt="Profile Avatar" class="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl object-cover ring-4 ring-slate-900 shadow-2xl bg-slate-800">
+              <div class="sm:mb-2">
+                <h2 id="profile-username" class="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-2 justify-center sm:justify-start">
+                  @username
+                </h2>
+                <p id="profile-bio" class="text-sm text-slate-400 mt-1 max-w-md">No bio provided yet.</p>
+              </div>
+            </div>
+
+            <!-- Profile Action (Follow or Edit) -->
+            <div id="profile-action-btn-container" class="sm:mb-2 shrink-0">
+              <!-- Rendered via JavaScript -->
+            </div>
+          </div>
+
+          <!-- Counter Cards -->
+          <div class="grid grid-cols-3 gap-3 pt-5 border-t border-slate-800/80">
+            <div class="bg-slate-950/40 border border-slate-800/60 rounded-2xl p-3.5 text-center">
+              <span id="profile-stat-posts" class="block text-2xl font-bold text-white">0</span>
+              <span class="text-xs uppercase tracking-wider text-slate-400 font-medium">Posts</span>
+            </div>
+            
+            <div onclick="openFollowersModal()" class="bg-slate-950/40 border border-slate-800/60 hover:border-blue-500/50 cursor-pointer rounded-2xl p-3.5 text-center transition-colors group">
+              <span id="profile-stat-followers" class="block text-2xl font-bold text-white group-hover:text-blue-400">0</span>
+              <span class="text-xs uppercase tracking-wider text-slate-400 font-medium">Followers</span>
+            </div>
+
+            <div onclick="openFollowingModal()" class="bg-slate-950/40 border border-slate-800/60 hover:border-blue-500/50 cursor-pointer rounded-2xl p-3.5 text-center transition-colors group">
+              <span id="profile-stat-following" class="block text-2xl font-bold text-white group-hover:text-blue-400">0</span>
+              <span class="text-xs uppercase tracking-wider text-slate-400 font-medium">Following</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User's Timeline Posts Section -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-timeline text-blue-500"></i> Timeline Posts
+          </h3>
+          <span class="text-xs text-slate-500">Showing recent activity</span>
+        </div>
+        <div id="profile-posts-container" class="space-y-4">
+          <!-- Populated via JavaScript -->
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ================= AUTH MODAL ================= -->
+  <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 rounded-2xl bg-blue-600/20 text-blue-500 flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <h3 id="auth-modal-title" class="text-xl font-bold text-white">Sign In to Pulse</h3>
+        <p id="auth-modal-subtitle" class="text-xs text-slate-400 mt-1">Connect with friends, share updates, and discover stories.</p>
+      </div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <div>
+          <label id="auth-username-label" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Username</label>
+          <input 
+            type="text" 
+            id="auth-username" 
+            required 
+            placeholder="e.g. tanim" 
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+          >
+        </div>
+
+        <div id="auth-email-container" class="hidden">
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Email Address</label>
+          <input 
+            type="email" 
+            id="auth-email" 
+            placeholder="tanim@example.com" 
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Password</label>
+          <input 
+            type="password" 
+            id="auth-password" 
+            required 
+            placeholder="••••••••" 
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+          >
+        </div>
+
+        <button 
+          type="submit" 
+          id="auth-submit-btn" 
+          class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/30 text-sm mt-2"
+        >
+          Sign In
+        </button>
+      </form>
+
+      <div class="mt-6 text-center text-xs text-slate-400">
+        <span id="auth-toggle-prompt">Don't have an account?</span>
+        <button onclick="toggleAuthMode()" id="auth-toggle-btn" class="text-blue-400 hover:underline font-semibold ml-1">
+          Create one now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= EDIT PROFILE MODAL ================= -->
+  <div id="edit-profile-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative">
+      <button onclick="closeEditProfileModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-user-pen text-blue-500"></i> Edit Profile
+      </h3>
+
+      <div class="space-y-4">
+        <!-- Avatar Preview & Local File Upload -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Profile Picture</label>
+          <div class="flex items-center gap-4">
+            <img id="edit-avatar-preview" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff&bold=true" onerror="handleImageError(this, 'User')" alt="Preview" class="w-16 h-16 rounded-2xl object-cover ring-2 ring-slate-700 bg-slate-800 shrink-0">
+            <div class="flex-1">
+              <label class="cursor-pointer inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-700 transition-colors">
+                <i class="fa-solid fa-upload"></i>
+                <span>Choose Image</span>
+                <input type="file" id="avatar-file-input" accept="image/*" class="hidden" onchange="previewSelectedImage(event)">
+              </label>
+              <p class="text-[11px] text-slate-400 mt-1">PNG, JPG, or GIF up to 5MB.</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Bio</label>
+          <textarea 
+            id="edit-bio-input" 
+            rows="3" 
+            placeholder="Tell the community about yourself..." 
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors resize-none"
+          ></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button onclick="closeEditProfileModal()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+            Cancel
+          </button>
+          <button onclick="saveProfileChanges()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-all shadow-md shadow-blue-600/30">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FOLLOWERS / FOLLOWING LIST MODAL ================= -->
+  <div id="follow-list-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative max-h-[80vh] flex flex-col">
+      <button onclick="closeFollowListModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <h3 id="follow-list-title" class="text-lg font-bold text-white mb-4">Followers</h3>
+      
+      <div id="follow-list-container" class="space-y-3 overflow-y-auto flex-1 pr-1">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST NOTIFICATION ================= -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-sm font-semibold">
+  </div>
+
+  <!-- ================= CORE FRONTEND LOGIC ================= -->
+  <script>
+    // Global State
+    let authToken = localStorage.getItem('pulse_token') || null;
+    let currentUser = null;
+    let currentFeedTab = 'global';
+    let authMode = 'login';
+    let activeProfileUsername = null;
+    let temporaryAvatarBase64 = null;
+
+    // Reliable fallback for any avatar loading error
+    function handleImageError(imgElement, username = 'User') {
+      imgElement.onerror = null;
+      imgElement.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=3b82f6&color=fff&bold=true`;
+    }
+
+    function getSafeAvatar(avatarUrl, username = 'User') {
+      if (avatarUrl && avatarUrl.trim() !== '') return avatarUrl;
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=3b82f6&color=fff&bold=true`;
+    }
+
+    // Initialize application on load
+    window.addEventListener('DOMContentLoaded', async () => {
+      await checkAuthSession();
+      handleHashRouting();
+      window.addEventListener('hashchange', handleHashRouting);
+    });
+
+    // Hash-based Routing
+    function handleHashRouting() {
+      const hash = window.location.hash || '#/feed';
+      
+      if (hash.startsWith('#/profile/')) {
+        const username = decodeURIComponent(hash.replace('#/profile/', ''));
+        loadProfileInterface(username);
+      } else {
+        showNewsFeedInterface();
+      }
+    }
+
+    function navigateToFeed(e) {
+      if (e) e.preventDefault();
+      window.location.hash = '#/feed';
+    }
+
+    function viewCurrentUserProfile() {
+      if (!currentUser) {
+        openAuthModal('login');
+        return;
+      }
+      window.location.hash = `#/profile/${currentUser.username}`;
+    }
+
+    function showNewsFeedInterface() {
+      document.getElementById('news-feed-interface').classList.remove('hidden');
+      document.getElementById('profile-interface').classList.add('hidden');
+
+      // Update Nav Button active states
+      const feedBtn = document.getElementById('nav-btn-feed');
+      const profileBtn = document.getElementById('nav-btn-profile');
+      if (feedBtn) feedBtn.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm";
+      if (profileBtn) profileBtn.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+
+      loadFeed(currentFeedTab);
+    }
+
+    async function checkAuthSession() {
+      if (!authToken) {
+        currentUser = null;
+        updateAuthUI();
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+          currentUser = await res.json();
+        } else {
+          logout();
+        }
+      } catch (err) {
+        console.error('Session error:', err);
+      }
+      updateAuthUI();
+    }
+
+    function updateAuthUI() {
+      const authActions = document.getElementById('auth-actions');
+      const composerAvatar = document.getElementById('composer-avatar');
+      const navTabs = document.getElementById('nav-interface-tabs');
+
+      if (currentUser) {
+        if (composerAvatar) {
+          composerAvatar.src = getSafeAvatar(currentUser.avatar, currentUser.username);
+        }
+        if (navTabs) navTabs.classList.remove('hidden');
+
+        authActions.innerHTML = `
+          <button onclick="navigateToFeed()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-600/30 transition-all">
+            <i class="fa-solid fa-feather"></i>
+            <span class="hidden sm:inline">Post</span>
+          </button>
+
+          <button onclick="viewCurrentUserProfile()" class="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-800/80 transition-colors">
+            <img src="${getSafeAvatar(currentUser.avatar, currentUser.username)}" onerror="handleImageError(this, '${currentUser.username}')" alt="${currentUser.username}" class="w-8 h-8 rounded-xl object-cover ring-2 ring-blue-500/60">
+          </button>
+
+          <button onclick="logout()" title="Logout" class="text-slate-400 hover:text-rose-400 p-2 rounded-xl hover:bg-slate-800/80 transition-colors">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        `;
+      } else {
+        if (navTabs) navTabs.classList.add('hidden');
+        if (composerAvatar) {
+          composerAvatar.src = getSafeAvatar('', 'User');
+        }
+
+        authActions.innerHTML = `
+          <button onclick="openAuthModal('login')" class="text-xs font-semibold px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+            Sign In
+          </button>
+          <button onclick="openAuthModal('signup')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-md shadow-blue-600/30 transition-all">
+            Sign Up
+          </button>
+        `;
+      }
+    }
+
+    function openAuthModal(mode = 'login') {
+      authMode = mode;
+      const modal = document.getElementById('auth-modal');
+      const title = document.getElementById('auth-modal-title');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      const prompt = document.getElementById('auth-toggle-prompt');
+      const toggleBtn = document.getElementById('auth-toggle-btn');
+      const emailContainer = document.getElementById('auth-email-container');
+      const emailInput = document.getElementById('auth-email');
+      const usernameLabel = document.getElementById('auth-username-label');
+
+      if (authMode === 'login') {
+        title.innerText = 'Sign In to Pulse';
+        submitBtn.innerText = 'Sign In';
+        prompt.innerText = "Don't have an account?";
+        toggleBtn.innerText = 'Create one now';
+        usernameLabel.innerText = 'Username or Email';
+        emailContainer.classList.add('hidden');
+        emailInput.required = false;
+      } else {
+        title.innerText = 'Join Pulse Today';
+        submitBtn.innerText = 'Create Account';
+        prompt.innerText = 'Already have an account?';
+        toggleBtn.innerText = 'Sign In instead';
+        usernameLabel.innerText = 'Username';
+        emailContainer.classList.remove('hidden');
+        emailInput.required = true;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      document.getElementById('auth-username').value = '';
+      document.getElementById('auth-email').value = '';
+      document.getElementById('auth-password').value = '';
+    }
+
+    function toggleAuthMode() {
+      openAuthModal(authMode === 'login' ? 'signup' : 'login');
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const username = document.getElementById('auth-username').value.trim();
+      const password = document.getElementById('auth-password').value.trim();
+      const email = document.getElementById('auth-email').value.trim();
+
+      const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      const payload = authMode === 'login' 
+        ? { username, password } 
+        : { username, email, password };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Authentication failed');
+
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem('pulse_token', authToken);
+
+        closeAuthModal();
+        updateAuthUI();
+        showToast(authMode === 'login' ? 'Welcome back!' : 'Account registered successfully!', 'success');
+        
+        loadFeed(currentFeedTab);
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function logout() {
+      authToken = null;
+      currentUser = null;
+      localStorage.removeItem('pulse_token');
+      updateAuthUI();
+      navigateToFeed();
+      showToast('Logged out successfully', 'info');
+    }
+
+    function switchFeedTab(tab) {
+      currentFeedTab = tab;
+      const globalBtn = document.getElementById('tab-global');
+      const followingBtn = document.getElementById('tab-following');
+
+      if (tab === 'global') {
+        globalBtn.className = "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm";
+        followingBtn.className = "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+      } else {
+        if (!currentUser) {
+          showToast('Please sign in to view your following feed', 'info');
+          openAuthModal('login');
+          return;
+        }
+        followingBtn.className = "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm";
+        globalBtn.className = "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+      }
+
+      loadFeed(tab);
+    }
+
+    async function loadFeed(feedType = 'global') {
+      const container = document.getElementById('posts-container');
+      container.innerHTML = `
+        <div class="text-center py-12 text-slate-500 animate-pulse text-sm">
+          <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2 text-blue-500"></i>
+          <p>Loading posts...</p>
+        </div>
+      `;
+
+      try {
+        const userIdParam = currentUser ? `userId=${currentUser.id}&` : '';
+        const res = await fetch(`/api/posts?${userIdParam}feed=${feedType}`);
+        const posts = await res.json();
+
+        if (!Array.isArray(posts) || posts.length === 0) {
+          container.innerHTML = `
+            <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
+              <i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-600"></i>
+              <p class="font-medium">No posts here yet.</p>
+              <p class="text-xs text-slate-500 mt-1">${feedType === 'following' ? 'Follow users to populate your personalized feed!' : 'Publish the very first post!'}</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = posts.map(renderPostCard).join('');
+      } catch (err) {
+        container.innerHTML = `<div class="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm rounded-xl">Failed to load posts.</div>`;
+      }
+    }
+
+    async function loadProfileInterface(username) {
+      activeProfileUsername = username;
+
+      document.getElementById('news-feed-interface').classList.add('hidden');
+      document.getElementById('profile-interface').classList.remove('hidden');
+
+      // Update Nav Buttons
+      const feedBtn = document.getElementById('nav-btn-feed');
+      const profileBtn = document.getElementById('nav-btn-profile');
+      if (feedBtn) feedBtn.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+      if (profileBtn) profileBtn.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm";
+
+      document.getElementById('profile-breadcrumb-name').innerText = `@${username}'s Profile`;
+
+      try {
+        const userIdParam = currentUser ? `?currentUserId=${currentUser.id}` : '';
+        const res = await fetch(`/api/users/${encodeURIComponent(username)}${userIdParam}`);
+        
+        if (!res.ok) throw new Error('User not found');
+        const user = await res.json();
+
+        // Populate Profile Info
+        const profileAvatar = document.getElementById('profile-avatar');
+        profileAvatar.src = getSafeAvatar(user.avatar, user.username);
+        profileAvatar.onerror = () => handleImageError(profileAvatar, user.username);
+
+        document.getElementById('profile-username').innerHTML = `@${user.username} <i class="fa-solid fa-circle-check text-blue-500 text-base"></i>`;
+        document.getElementById('profile-bio').innerText = user.bio || 'No bio provided yet.';
+        document.getElementById('profile-stat-posts').innerText = user.postCount ?? 0;
+        document.getElementById('profile-stat-followers').innerText = user.followerCount ?? 0;
+        document.getElementById('profile-stat-following').innerText = user.followingCount ?? 0;
+
+        // Render Action Button
+        const actionContainer = document.getElementById('profile-action-btn-container');
+        if (currentUser && currentUser.username === user.username) {
+          actionContainer.innerHTML = `
+            <button onclick="openEditProfileModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2">
+              <i class="fa-solid fa-pen-to-square"></i>
+              <span>Edit Profile</span>
+            </button>
+          `;
+        } else {
+          const isFollowing = user.isFollowing;
+          actionContainer.innerHTML = `
+            <button 
+              onclick="toggleFollowUser('${user.username}')" 
+              class="${isFollowing ? 'bg-slate-800 text-slate-300 hover:bg-rose-500/20 hover:text-rose-400 border border-slate-700' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30'} text-xs font-semibold px-5 py-2 rounded-xl transition-all flex items-center gap-2"
+            >
+              <i class="fa-solid ${isFollowing ? 'fa-user-check' : 'fa-user-plus'}"></i>
+              <span>${isFollowing ? 'Following' : 'Follow'}</span>
+            </button>
+          `;
+        }
+
+        // Fetch User's Posts
+        loadUserTimelinePosts(username);
+
+      } catch (err) {
+        showToast(err.message, 'error');
+        navigateToFeed();
+      }
+    }
+
+    async function loadUserTimelinePosts(username) {
+      const container = document.getElementById('profile-posts-container');
+      container.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">Loading activity...</div>`;
+
+      try {
+        const userIdParam = currentUser ? `userId=${currentUser.id}&` : '';
+        const res = await fetch(`/api/posts?${userIdParam}username=${encodeURIComponent(username)}`);
+        const posts = await res.json();
+
+        if (!Array.isArray(posts) || posts.length === 0) {
+          container.innerHTML = `
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 text-center text-slate-400">
+              <p class="text-sm font-medium">@${username} hasn't posted anything yet.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = posts.map(renderPostCard).join('');
+      } catch (err) {
+        container.innerHTML = `<div class="text-rose-400 text-sm p-3">Failed to load user posts.</div>`;
+      }
+    }
+
+    function renderPostCard(post) {
+      const isOwner = currentUser && currentUser.id === post.user_id;
+      const formattedDate = new Date(post.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const likesCount = post.likes_count ?? post.like_count ?? 0;
+      const commentsCount = post.comments_count ?? post.comment_count ?? (post.comments ? post.comments.length : 0);
+      const isLiked = Boolean(post.is_liked ?? post.user_liked);
+      const postAvatar = getSafeAvatar(post.avatar, post.username);
+
+      return `
+        <article class="bg-slate-900/70 border border-slate-800/90 rounded-2xl p-5 shadow-lg transition-all hover:border-slate-700/80">
+          <!-- Post Author Header -->
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <a href="#/profile/${post.username}" class="group">
+                <img src="${postAvatar}" onerror="handleImageError(this, '${post.username}')" alt="${post.username}" class="w-10 h-10 rounded-2xl object-cover ring-2 ring-slate-800 group-hover:ring-blue-500 transition-all">
+              </a>
+              <div>
+                <a href="#/profile/${post.username}" class="font-bold text-sm text-white hover:text-blue-400 transition-colors">
+                  @${post.username}
+                </a>
+                <span class="block text-[11px] text-slate-500">${formattedDate}</span>
+              </div>
+            </div>
+
+            ${isOwner ? `
+              <button onclick="deletePost(${post.id})" title="Delete post" class="text-slate-500 hover:text-rose-400 p-2 text-xs rounded-lg transition-colors">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            ` : ''}
+          </div>
+
+          <!-- Post Content -->
+          <p class="text-slate-200 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words mb-4">${escapeHtml(post.content)}</p>
+
+          <!-- Metrics / Actions Bar -->
+          <div class="flex items-center gap-6 pt-3 border-t border-slate-800/60 text-xs font-semibold text-slate-400">
+            <button 
+              onclick="toggleLikePost(${post.id})" 
+              class="flex items-center gap-2 hover:text-rose-500 transition-colors ${isLiked ? 'text-rose-500 font-bold' : ''}"
+            >
+              <i class="${isLiked ? 'fa-solid text-rose-500' : 'fa-regular'} fa-heart text-base"></i>
+              <span>${likesCount}</span>
+            </button>
+
+            <button onclick="focusCommentInput(${post.id})" class="flex items-center gap-2 hover:text-blue-400 transition-colors">
+              <i class="fa-regular fa-comment text-base"></i>
+              <span>${commentsCount}</span>
+            </button>
+
+            <button onclick="copyPostLink('${post.username}')" class="ml-auto hover:text-slate-200 transition-colors" title="Share">
+              <i class="fa-regular fa-paper-plane text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Comments Thread -->
+          <div class="mt-4 pt-3 border-t border-slate-800/40 space-y-2.5">
+            <div id="comments-list-${post.id}" class="space-y-2">
+              ${(post.comments || []).map(c => `
+                <div class="flex items-start gap-2.5 bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/50">
+                  <a href="#/profile/${c.username}">
+                    <img src="${getSafeAvatar(c.avatar, c.username)}" onerror="handleImageError(this, '${c.username}')" alt="${c.username}" class="w-6 h-6 rounded-lg object-cover ring-1 ring-slate-700">
+                  </a>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <a href="#/profile/${c.username}" class="text-xs font-bold text-slate-300 hover:text-blue-400">@${c.username}</a>
+                      <span class="text-[10px] text-slate-500">${new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5 break-words">${escapeHtml(c.content)}</p>
+                  </div>
+                </div>
+              `).join('')}
+              ${(!post.comments || post.comments.length === 0) ? `<p class="text-[11px] text-slate-500 italic">No comments yet.</p>` : ''}
+            </div>
+
+            <!-- Comment Input -->
+            <div class="flex items-center gap-2 pt-2">
+              <input 
+                type="text" 
+                id="comment-input-${post.id}" 
+                onkeydown="handleCommentKeypress(event, ${post.id})"
+                placeholder="Write a reply..." 
+                class="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              >
+              <button 
+                onclick="submitComment(${post.id})" 
+                class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all"
+              >
+                Reply
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    async function publishPost() {
+      if (!currentUser) {
+        showToast('Please sign in to publish a post', 'info');
+        openAuthModal('login');
+        return;
+      }
+
+      const input = document.getElementById('post-content-input');
+      const content = input.value.trim();
+      if (!content) return;
+
+      try {
+        const res = await fetch('/api/posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ content })
+        });
+
+        if (!res.ok) throw new Error('Could not publish post');
+
+        input.value = '';
+        showToast('Post shared with community!', 'success');
+        await loadFeed(currentFeedTab);
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function deletePost(postId) {
+      if (!confirm('Are you sure you want to delete this post?')) return;
+
+      try {
+        const res = await fetch(`/api/posts/${postId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${authToken}` }
+        });
+
+        if (!res.ok) throw new Error('Failed to delete post');
+
+        showToast('Post deleted', 'info');
+        if (window.location.hash.startsWith('#/profile/')) {
+          loadUserTimelinePosts(activeProfileUsername);
+        } else {
+          loadFeed(currentFeedTab);
+        }
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function toggleLikePost(postId) {
+      if (!currentUser) {
+        showToast('Sign in to like posts', 'info');
+        openAuthModal('login');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/${postId}/like`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to toggle like');
+
+        if (window.location.hash.startsWith('#/profile/')) {
+          loadUserTimelinePosts(activeProfileUsername);
+        } else {
+          loadFeed(currentFeedTab);
+        }
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function handleCommentKeypress(e, postId) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitComment(postId);
+      }
+    }
+
+    async function submitComment(postId) {
+      if (!currentUser || !authToken) {
+        showToast('Please sign in to comment', 'info');
+        openAuthModal('login');
+        return;
+      }
+
+      const input = document.getElementById(`comment-input-${postId}`);
+      if (!input) return;
+
+      const content = input.value.trim();
+      if (!content) {
+        showToast('Please write something first', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/${postId}/comments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ content })
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok) {
+          const errMsg = data && (data.error || data.message) ? (data.error || data.message) : `HTTP ${res.status} error`;
+          // If session expired or user ID is stale, prompt re-login
+          if (res.status === 401 || res.status === 403) {
+            logout();
+            openAuthModal('login');
+          }
+          throw new Error(errMsg);
+        }
+
+        input.value = '';
+        showToast('Comment posted successfully!', 'success');
+
+        if (window.location.hash.startsWith('#/profile/')) {
+          await loadUserTimelinePosts(activeProfileUsername);
+        } else {
+          await loadFeed(currentFeedTab);
+        }
+      } catch (err) {
+        console.error('Comment error:', err);
+        showToast(err.message || 'Failed to submit comment', 'error');
+      }
+    }
+
+    function focusCommentInput(postId) {
+      const input = document.getElementById(`comment-input-${postId}`);
+      if (input) input.focus();
+    }
+
+    async function toggleFollowUser(username) {
+      if (!currentUser) {
+        showToast('Sign in to follow creators', 'info');
+        openAuthModal('login');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/users/${encodeURIComponent(username)}/follow`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Action failed');
+
+        loadProfileInterface(username);
+        showToast(data.following ? `Now following @${username}` : `Unfollowed @${username}`, 'info');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // Profile Edit Modal & Image Reader
+    function openEditProfileModal() {
+      if (!currentUser) return;
+      const preview = document.getElementById('edit-avatar-preview');
+      preview.src = getSafeAvatar(currentUser.avatar, currentUser.username);
+      preview.onerror = () => handleImageError(preview, currentUser.username);
+
+      document.getElementById('edit-bio-input').value = currentUser.bio || '';
+      temporaryAvatarBase64 = null;
+      document.getElementById('edit-profile-modal').classList.remove('hidden');
+    }
+
+    function closeEditProfileModal() {
+      document.getElementById('edit-profile-modal').classList.add('hidden');
+    }
+
+    function previewSelectedImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('File size must be under 5MB', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        temporaryAvatarBase64 = e.target.result;
+        document.getElementById('edit-avatar-preview').src = temporaryAvatarBase64;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function saveProfileChanges() {
+      const bio = document.getElementById('edit-bio-input').value.trim();
+      const payload = { bio };
+      if (temporaryAvatarBase64) {
+        payload.avatar = temporaryAvatarBase64;
+      }
+
+      try {
+        const res = await fetch('/api/users/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+
+        currentUser = data.user;
+        updateAuthUI();
+        closeEditProfileModal();
+        loadProfileInterface(currentUser.username);
+        showToast('Profile updated successfully!', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // Followers & Following Modal
+    async function openFollowersModal() {
+      if (!activeProfileUsername) return;
+      document.getElementById('follow-list-title').innerText = `Followers of @${activeProfileUsername}`;
+      await fetchAndDisplayUserList(`/api/users/${encodeURIComponent(activeProfileUsername)}/followers`);
+    }
+
+    async function openFollowingModal() {
+      if (!activeProfileUsername) return;
+      document.getElementById('follow-list-title').innerText = `@${activeProfileUsername} is Following`;
+      await fetchAndDisplayUserList(`/api/users/${encodeURIComponent(activeProfileUsername)}/following`);
+    }
+
+    async function fetchAndDisplayUserList(endpoint) {
+      const modal = document.getElementById('follow-list-modal');
+      const container = document.getElementById('follow-list-container');
+      modal.classList.remove('hidden');
+
+      container.innerHTML = `<div class="text-center py-6 text-slate-500 text-sm">Loading list...</div>`;
+
+      try {
+        const res = await fetch(endpoint);
+        const users = await res.json();
+
+        if (!Array.isArray(users) || users.length === 0) {
+          container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">No users found.</div>`;
+          return;
+        }
+
+        container.innerHTML = users.map(u => `
+          <div class="flex items-center justify-between p-2.5 bg-slate-950/60 rounded-xl border border-slate-800">
+            <div class="flex items-center gap-3">
+              <img src="${getSafeAvatar(u.avatar, u.username)}" onerror="handleImageError(this, '${u.username}')" class="w-9 h-9 rounded-xl object-cover">
+              <div>
+                <a href="#/profile/${u.username}" onclick="closeFollowListModal()" class="text-xs font-bold text-white hover:text-blue-400">@${u.username}</a>
+                <p class="text-[11px] text-slate-400 line-clamp-1">${escapeHtml(u.bio || 'Pulse member')}</p>
+              </div>
+            </div>
+            <a href="#/profile/${u.username}" onclick="closeFollowListModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700">
+              View
+            </a>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<div class="text-rose-400 text-xs py-4 text-center">Failed to load users.</div>`;
+      }
+    }
+
+    function closeFollowListModal() {
+      document.getElementById('follow-list-modal').classList.add('hidden');
+    }
+
+    let searchTimeout = null;
+    function handleUserSearch(val) {
+      clearTimeout(searchTimeout);
+      const dropdown = document.getElementById('search-dropdown');
+      const q = val.trim();
+
+      if (!q) {
+        dropdown.classList.add('hidden');
+        return;
+      }
+
+      searchTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
+          const results = await res.json();
+
+          if (!Array.isArray(results) || results.length === 0) {
+            dropdown.innerHTML = `<div class="p-3 text-xs text-slate-500 text-center">No users match "${escapeHtml(q)}"</div>`;
+          } else {
+            dropdown.innerHTML = results.map(u => `
+              <div onclick="selectSearchResult('${u.username}')" class="flex items-center gap-3 p-3 hover:bg-slate-800/80 cursor-pointer transition-colors">
+                <img src="${getSafeAvatar(u.avatar, u.username)}" onerror="handleImageError(this, '${u.username}')" class="w-8 h-8 rounded-xl object-cover ring-1 ring-slate-700">
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-white">@${u.username}</p>
+                  <p class="text-[10px] text-slate-400 truncate">${escapeHtml(u.bio || 'Pulse user')}</p>
+                </div>
+              </div>
+            `).join('');
+          }
+          dropdown.classList.remove('hidden');
+        } catch (err) {
+          console.error(err);
+        }
+      }, 250);
+    }
+
+    function selectSearchResult(username) {
+      document.getElementById('search-dropdown').classList.add('hidden');
+      document.getElementById('search-input').value = '';
+      window.location.hash = `#/profile/${username}`;
+    }
+
+    // Close search dropdown on outside click
+    document.addEventListener('click', (e) => {
+      const searchBox = document.getElementById('search-input');
+      const dropdown = document.getElementById('search-dropdown');
+      if (searchBox && !searchBox.contains(e.target) && dropdown && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    // Helpers
+    function copyPostLink(username) {
+      const url = `${window.location.origin}/#/profile/${username}`;
+      const tempInput = document.createElement('input');
+      tempInput.value = url;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      showToast('Profile link copied to clipboard!', 'info');
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.className = `fixed bottom-5 right-5 z-50 transform transition-all duration-300 pointer-events-none flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-sm font-semibold ${
+        type === 'success' ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-300' :
+        type === 'error' ? 'bg-rose-950/90 border-rose-500/50 text-rose-300' :
+        'bg-blue-950/90 border-blue-500/50 text-blue-300'
+      }`;
+      toast.innerHTML = `
+        <i class="fa-solid ${type === 'success' ? 'fa-circle-check text-emerald-400' : type === 'error' ? 'fa-circle-exclamation text-rose-400' : 'fa-circle-info text-blue-400'}"></i>
+        <span>${escapeHtml(message)}</span>
+      `;
+      toast.classList.remove('opacity-0', 'translate-y-20');
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-20');
+      }, 3200);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return text.toString().replace(/[&<>"']/g, m => map[m]);
+    }
+  </script>
+</body>
+</html>
